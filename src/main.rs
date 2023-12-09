@@ -2,6 +2,8 @@ mod day1;
 mod day2;
 mod day3;
 mod day4;
+mod day5;
+mod day6;
 
 fn main() {
     println!("Welcome to the Advent Solver!");
@@ -41,6 +43,18 @@ fn main() {
         }
         (4, 2) => {
             println!("The solution to day 4, challenge 2 is: {}", day4::c2(contents));
+        }
+        (5, 1) => {
+            println!("The solution to day 5, challenge 1 is: {}", day5::c1(contents));
+        }
+        (5, 2) => {
+            println!("The solution to day 5, challenge 2 is: {}", day5::c2(contents));
+        }
+        (6, 1) => {
+            println!("The solution to day 6, challenge 1 is: {}", day6::c1(contents));
+        }
+        (6, 2) => {
+            println!("The solution to day 6, challenge 2 is: {}", day6::c2(contents));
         }
         (_, _) => {
             println!("This challenge has not been solved yet!");

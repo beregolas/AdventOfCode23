@@ -1,4 +1,5 @@
 use std::ops::Index;
+use itertools::Itertools;
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 enum Direction {
@@ -18,6 +19,24 @@ impl Direction {
         }
     }
 
+    fn left(&self) -> Direction {
+        match self {
+            Direction::North => Direction::West,
+            Direction::South => Direction::East,
+            Direction::East => Direction::North,
+            Direction::West => Direction::South
+        }
+    }
+
+    fn right(&self) -> Direction {
+        match self {
+            Direction::North => Direction::East,
+            Direction::South => Direction::West,
+            Direction::East => Direction::South,
+            Direction::West => Direction::North
+        }
+    }
+
     fn rev(&self) -> Direction {
         match self {
             Direction::North => Direction::South,
@@ -28,7 +47,7 @@ impl Direction {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 enum Field {
     Pipe(Direction, Direction),
     Start,
@@ -50,7 +69,7 @@ impl Field {
         }
     }
 
-    fn get_other_direction(&self, dir: Direction) -> Option<Direction> {
+    fn move_from_to(&self, dir: Direction) -> Option<Direction> {
         match self {
             Field::Pipe(d1, d2) => {
                 if d1 == &dir {
@@ -75,11 +94,38 @@ impl Field {
             Field::Empty => false
         }
     }
+
+    fn get_left_right(&self, out_dir: Direction) -> (Vec<Direction>, Vec<Direction>) {
+        let mut right_mode = true;
+        let mut left = Vec::new();
+        let mut right = Vec::new();
+        let mut dir = out_dir;
+        loop {
+            dir = dir.right();
+            if self.connects_to(dir) {
+                if right_mode {
+                    right_mode = false;
+                } else {
+                    return (left, right)
+                }
+                right_mode = false;
+            } else {
+                if right_mode {
+                    right.push(dir);
+                } else {
+                    left.push(dir);
+                }
+            }
+        }
+    }
 }
+
+#[derive(Clone, Copy, Eq, PartialEq, Debug, Hash)]
+struct Position(usize, usize);
 
 struct Graph {
     data: Vec<Vec<Field>>,
-    start: Option<(usize, usize)>,
+    start: Option<Position>,
     start_directions: Option<(Direction, Direction)>,
 }
 
@@ -96,41 +142,92 @@ impl Graph {
         self.data.push(row);
     }
 
-    fn find_start(&self) -> (usize, usize) {
+    fn find_start(&self) -> Position {
         for (y, row) in self.data.iter().enumerate() {
             for (x, field) in row.iter().enumerate() {
                 if let Field::Start = field {
-                    return (x, y);
+                    return Position(x, y);
                 }
             }
         }
         panic!("No start found");
     }
 
-    fn walk(&self, pos: (usize, usize), dir: Direction) -> Option<(usize, usize)> {
+    fn slide(&self, pos: Position, dir: Direction) -> Option<Position> {
         // get direction as vector
         let (dx, dy) = dir.resolve();
-        // get current field
-        let field = &self[(pos.0, pos.1)];
-        // get next field
         let next_position = (pos.0 as i32 + dx, pos.1 as i32 + dy);
         if next_position.0 < 0 || next_position.1 < 0 || next_position.0 >= self.data[0].len() as i32 || next_position.1 >= self.data.len() as i32 {
-            return None;
+            None
+        } else {
+            Some(Position(next_position.0 as usize, next_position.1 as usize))
         }
-        let next = &self[(next_position.0 as usize, next_position.1 as usize)];
-        // check if both fields connect to each other
-        if field.connects_to(dir) && next.connects_to(dir.rev()) {
-            Some((next_position.0 as usize, next_position.1 as usize))
+
+    }
+
+    fn step(&self, pos: Position, dir: Direction) -> Option<Position> {
+        let field = self[pos];
+        let next_position = self.slide(pos, dir);
+        if let Some(next_position) = next_position {
+            let next_field = self[next_position];
+            if field.connects_to(dir) && next_field.connects_to(dir.rev()) {
+                Some(next_position)
+            } else {
+                None
+            }
         } else {
             None
         }
     }
+
+    fn find_path(&self, start: Position, start_direction: Direction) -> Option<(Vec<Position>, Vec<Position>)> {
+        let mut path = Vec::new();
+        let mut right_nodes = Vec::new();
+        let mut left_nodes = Vec::new();
+        let mut left = 0;
+        let mut right = 0;
+        let mut pos = start;
+        let mut dir = start_direction;
+        let mut node = self[pos];
+        while let Some(next_pos) = self.step(pos, dir) {
+            // find all left and right nodes this node doesn't connect to
+            let (l, r) = node.get_left_right(dir);
+            for d in l {
+                if let Some(neighbour) = self.slide(pos, d) {
+                    left_nodes.push(neighbour);
+                }
+            }
+            for d in r {
+                if let Some(neighbour) = self.slide(pos, d) {
+                    right_nodes.push(neighbour);
+                }
+            }
+            // collect left and right turns
+            if node.connects_to(dir.left()) && node != Field::Start {
+                left += 1;
+            }
+            if node.connects_to(dir.right()) && node != Field::Start {
+                right += 1;
+            }
+            // add pos to path
+            path.push(pos);
+            // move to next pos
+            pos = next_pos;
+            node = self[pos];
+            dir = node.move_from_to(dir.rev()).unwrap_or(start_direction);
+            if let Field::Start = self[pos] {
+                return Some((path, if left > right { left_nodes } else { right_nodes }));
+            }
+        }
+        None
+    }
+
 }
 
-impl Index<(usize, usize)> for Graph {
+impl Index<Position> for Graph {
     type Output = Field;
 
-    fn index(&self, index: (usize, usize)) -> &Self::Output {
+    fn index(&self, index: Position) -> &Self::Output {
         &self.data[index.1][index.0]
     }
 }
@@ -145,7 +242,7 @@ pub(crate) fn c1(input: String) -> String {
     for direction in directions {
         let mut pos = graph.find_start();
         // try to take the first step
-        if let Some(next) = graph.walk(pos, direction) {
+        if let Some(next) = graph.step(pos, direction) {
             pos = next;
         } else {
             continue;
@@ -154,9 +251,9 @@ pub(crate) fn c1(input: String) -> String {
         let mut steps = 1;
         loop {
             // try to take a step in a new direction
-            let new_direction = graph[pos].get_other_direction(last_direction.rev());
+            let new_direction = graph[pos].move_from_to(last_direction.rev());
             if let Some(new_direction) = new_direction {
-                if let Some(next) = graph.walk(pos, new_direction) {
+                if let Some(next) = graph.step(pos, new_direction) {
                     pos = next;
                     last_direction = new_direction;
                     steps += 1;
@@ -178,5 +275,61 @@ pub(crate) fn c1(input: String) -> String {
 
 
 pub(crate) fn c2(input: String) -> String {
-    "sum".to_string()
+    let mut graph = Graph::new();
+    for line in input.lines() {
+        graph.add_row(line.chars().map(|c| Field::new(c)).collect());
+    }
+    let start = graph.find_start();
+    let mut result = None;
+    let mut directions = vec![Direction::North, Direction::South, Direction::East, Direction::West];
+    while result == None && directions.len() > 0 {
+        let dir = directions.pop().unwrap();
+        result = graph.find_path(start, dir);
+    }
+    let (path, inside) = result.unwrap();
+    let mut q: Vec<Position> = inside
+        .into_iter()
+        .filter(|pos| !path.contains(pos))
+        .unique()
+        .collect();
+    // make more inner nodes that touch
+    let mut inner = Vec::new();
+    while let Some(pos) = q.pop() {
+        let neighbours: Vec<Position> = vec![Direction::North, Direction::South, Direction::East, Direction::West]
+            .iter()
+            .map(|dir| graph.slide(pos, *dir))
+            .filter(|pos| pos.is_some())
+            .map(|pos| pos.unwrap())
+            .collect();
+        for neighbour in neighbours {
+            if !path.contains(&neighbour) && !inner.contains(&neighbour) && !q.contains(&neighbour) {
+                q.push(neighbour);
+            }
+        }
+        inner.push(pos);
+    }
+
+
+    inner.iter().count().to_string()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_find_left_right1() {
+        let f1 = Field::new('J');
+        let (l, r) = f1.get_left_right(Direction::North);
+        assert_eq!(l, vec![]);
+        assert_eq!(r, vec![Direction::East, Direction::South]);
+    }
+
+    #[test]
+    fn test_find_left_right2() {
+        let f1 = Field::new('-');
+        let (l, r) = f1.get_left_right(Direction::West);
+        assert_eq!(r, vec![Direction::North]);
+        assert_eq!(l, vec![Direction::South]);
+    }
 }

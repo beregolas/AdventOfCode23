@@ -57,9 +57,18 @@ impl Path<'_> {
         }
     }
 
+    fn is_target(&self, idx: i128) -> bool {
+        for &target in &self.target_positions {
+            if (idx - target as i128) % (self.nodes.len() - self.circle_start.unwrap()) as i128 == 0 {
+                return true;
+            }
+        }
+        false
+    }
+
     fn follow_until_circle(&mut self) {
         loop {
-            let mut next_instruction_idx = self.nodes.len() % self.instructions.len();
+            let mut next_instruction_idx = (self.nodes.len()-1) % self.instructions.len();
             let mut next_node = self.graph.follow(
                 self.nodes.last().unwrap().0,
                 self.instructions[next_instruction_idx]
@@ -84,29 +93,23 @@ impl Path<'_> {
 
 }
 
-fn get_common_target(paths: Vec<Path>) -> Option<usize> {
-    let mut current_targets: Vec<usize> = paths
-        .iter()
-        .map(|p| p.target_positions[0])
-        .collect();
-    let steps: Vec<usize> = paths
-        .iter()
-        .map(|p|p.nodes.len() - p.circle_start.unwrap())
-        .collect();
-    // check if all current targets have the same value
-    while current_targets
-        .windows(2)
-        .any(|w| w[0] != w[1]) {
-        // get lowest targets index
-        let lowest = current_targets.iter().enumerate().min_by(|(_, a), (_, b)| a.cmp(b)).unwrap().0;
-        // add step to this target
-        current_targets[lowest] += steps[lowest];
-        // println!("{:?}", current_targets)
+fn get_common_target(paths: Vec<Path>) -> u128 {
+    // get first path
+    let first = paths.first().unwrap();
+    // iterate until you find an integer that is a valid target for all paths
+    let mut n = first.target_positions.first().unwrap().clone() as u128;
+    loop {
+        if paths.iter().all(|path| path.is_target(n as i128)) {
+            return n;
+        }
+        if !first.is_target(n as i128) {
+            println!("ERROR!!!!")
+        }
+        n += first.nodes.len() as u128 - first.circle_start.unwrap() as u128;
+        if (n % 1000000) < 1000 {
+            println!("n: {}", n);
+        }
     }
-    // all targets are the same
-    // return the first one
-
-    Some(current_targets[0])
 }
 
 pub(crate) fn c1(input: String) -> String {
@@ -165,7 +168,6 @@ pub(crate) fn c2(input: String) -> String {
             None
         }
     }).collect();
-    let mut count: usize = 0;
     // find a loop for every path
     let mut paths: Vec<Path> = Vec::new();
     for (i, n) in start_nodes.iter().enumerate() {
@@ -175,22 +177,6 @@ pub(crate) fn c2(input: String) -> String {
         path.follow_until_circle();
         paths.push(path);
     }
-    count = get_common_target(paths).unwrap();
+    let count = get_common_target(paths);
     count.to_string()
 }
-
-/*
-    formula for all targets in two paths: (there is only one target in each path funnily enough and all
-    start with an offset of one) so we ignore the offset and add one at the end
-
-    target1(n) = path1.target + n * path1.len
-    target2(n) = path2.target + n * path2.len
-    target1(n1) = target2(n2) for which n
-    path1.target + n1 * path1.len = path2.target + n2 * path2.len
-    n2 = (path1.target + n1 * path1.len - path2.target) / path2.len
-
-    let's just try it
-
-
-
- */

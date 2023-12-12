@@ -1,12 +1,16 @@
+// let's try brute force first
 
+fn brute_force_solve(line: &str, segments: &Vec<u32>) -> u32 {
+    panic!("not implemented!")
+}
 
+fn parse(line: &str) -> (&str, Vec<u32>) {
+    panic!("not implemented!")
+}
 
 pub(crate) fn c1(input: String) -> String {
-    for line in input.lines() {
-        let chars = *line.split(" ").collect::<Vec<&str>>().first().unwrap();
-        println!("{}", line);
-    }
-    "sum".to_string()
+    parse(input.as_str());
+    "".to_string()
 }
 
 pub(crate) fn c2(input: String) -> String {

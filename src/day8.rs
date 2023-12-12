@@ -4,9 +4,6 @@ use std::collections::HashMap;
 struct Node([char; 3]);
 
 impl Node {
-    fn new(name: [char; 3]) -> Node {
-        Node(name)
-    }
 
     fn ends_in_z(&self) -> bool {
         self.0[2] == 'Z'
@@ -68,12 +65,12 @@ impl Path<'_> {
 
     fn follow_until_circle(&mut self) {
         loop {
-            let mut next_instruction_idx = (self.nodes.len()-1) % self.instructions.len();
-            let mut next_node = self.graph.follow(
+            let next_instruction_idx = (self.nodes.len()-1) % self.instructions.len();
+            let next_node = self.graph.follow(
                 self.nodes.last().unwrap().0,
                 self.instructions[next_instruction_idx]
             );
-            let mut next = (next_node, next_instruction_idx, next_node.ends_in_z());
+            let next = (next_node, next_instruction_idx, next_node.ends_in_z());
             if self.nodes.contains(&next) {
                 // circle found, save circle start
                 self.circle_start = Some(self.nodes.iter().position(|x| x == &next).unwrap());
@@ -161,7 +158,7 @@ pub(crate) fn c2(input: String) -> String {
     }
     // follow the yellow brick road
     // until all current nodes end in Z
-    let mut start_nodes: Vec<Node> = graph.nodes.keys().filter_map(|node| {
+    let start_nodes: Vec<Node> = graph.nodes.keys().filter_map(|node| {
         if node.0[2] == 'A' {
             Some(*node)
         } else {
@@ -170,7 +167,7 @@ pub(crate) fn c2(input: String) -> String {
     }).collect();
     // find a loop for every path
     let mut paths: Vec<Path> = Vec::new();
-    for (i, n) in start_nodes.iter().enumerate() {
+    for (_, n) in start_nodes.iter().enumerate() {
         let start = *n;
         // follow the yellow brick road until we reach a circle
         let mut path = Path::new(start, &graph, instructions.clone());

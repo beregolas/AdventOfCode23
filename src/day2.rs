@@ -1,5 +1,4 @@
 use std::cmp::max;
-use regex::Regex;
 
 
 
@@ -34,7 +33,7 @@ pub(crate) fn c2(input: String) -> String {
     let mut sum = 0;
     for line in input.lines() {
         let parts = line.split(":").collect::<Vec<&str>>();
-        let id: u32 = parts[0].split(" ").collect::<Vec<&str>>()[1].parse().expect("This is not a number!");
+        let _id: u32 = parts[0].split(" ").collect::<Vec<&str>>()[1].parse().expect("This is not a number!");
         let games = parts[1].split(";").collect::<Vec<&str>>();
         // check all games for lowest possible score
         let mut red: u32 = 0;

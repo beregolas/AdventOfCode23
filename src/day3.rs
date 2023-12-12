@@ -102,7 +102,7 @@ pub(crate) fn c2(input: String) -> String {
         }
     }
     println!("{:?}", gears);
-    for (gear, hits) in gears {
+    for (_gear, hits) in gears {
         if hits.len() == 2 {
             sum += hits[0].number * hits[1].number;
         }

@@ -80,7 +80,7 @@ pub(crate) fn c1(input: String) -> String {
         if line.chars().next().unwrap().is_alphabetic() {
             // if line starts with "seeds:", add initial seeds
             if line.starts_with("seeds:") {
-                let mut seed_list = line.split(" ").skip(1);
+                let seed_list = line.split(" ").skip(1);
                 for seed in seed_list {
                     seeds.push(seed.parse::<usize>().unwrap());
                 }
@@ -122,7 +122,7 @@ pub(crate) fn c2(input: String) -> String {
         if line.chars().next().unwrap().is_alphabetic() {
             // if line starts with "seeds:", add initial seeds
             if line.starts_with("seeds:") {
-                let mut seed_list = line.split(" ").skip(1);
+                let seed_list = line.split(" ").skip(1);
                 for seed in seed_list {
                     seeds.push(seed.parse::<usize>().unwrap());
                 }

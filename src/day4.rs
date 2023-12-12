@@ -1,4 +1,3 @@
-use std::cmp::min;
 
 fn get_line_numbers(line: &str) -> (u32, Vec<u32>, Vec<u32>) {
     // split line into card number and list of numbers
@@ -27,7 +26,7 @@ fn get_winner_amount(winners: &Vec<u32>, chosen: &Vec<u32>) -> u32 {
 pub(crate) fn c1(input: String) -> String {
     let mut total_sum = 0;
     for line in input.lines() {
-        let (index, winners, chosen) = get_line_numbers(line);
+        let (_idx, winners, chosen) = get_line_numbers(line);
         let winner_sum = get_winner_amount(&winners, &chosen);
         if winner_sum > 0 {
             total_sum += 2_u32.pow(winner_sum-1);

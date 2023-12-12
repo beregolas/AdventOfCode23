@@ -29,7 +29,7 @@ pub(crate) fn c1(input: String) -> String {
       for i in 1..t {
          let race_distance = (t-i) * i;
          if race_distance > d {
-            winning_times += 1;;
+            winning_times += 1;
          }
       }
       println!("{}...{} -> {}", t, d, winning_times);
@@ -47,7 +47,7 @@ pub(crate) fn c2(input: String) -> String {
    for i in 1..time {
       let race_distance = (time-i) * i;
       if race_distance > distance {
-         winning_times += 1;;
+         winning_times += 1;
       }
    }
     winning_times.to_string()

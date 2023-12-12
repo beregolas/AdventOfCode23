@@ -22,7 +22,7 @@ impl Universe {
         self.galaxies.push(galaxy);
     }
 
-    fn set_size(&mut self, size: (usize, usize)) {
+    fn _set_size(&mut self, size: (usize, usize)) {
         self.size = size;
     }
 

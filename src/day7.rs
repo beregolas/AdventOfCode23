@@ -136,7 +136,7 @@ impl Ord for Hand {
     }
 }
 
-pub(crate) fn c1(input: String) -> String {
+pub(crate) fn c1(_input: String) -> String {
     "sum".to_string()
 }
 

@@ -96,21 +96,21 @@ impl Field {
     }
 
     fn get_left_right(&self, out_dir: Direction) -> (Vec<Direction>, Vec<Direction>) {
-        let mut right_mode = true;
+        let mut _right_mode = true;
         let mut left = Vec::new();
         let mut right = Vec::new();
         let mut dir = out_dir;
         loop {
             dir = dir.right();
             if self.connects_to(dir) {
-                if right_mode {
-                    right_mode = false;
+                if _right_mode {
+                    _right_mode = false;
                 } else {
                     return (left, right)
                 }
-                right_mode = false;
+                _right_mode = false;
             } else {
-                if right_mode {
+                if _right_mode {
                     right.push(dir);
                 } else {
                     left.push(dir);
@@ -125,16 +125,16 @@ struct Position(usize, usize);
 
 struct Graph {
     data: Vec<Vec<Field>>,
-    start: Option<Position>,
-    start_directions: Option<(Direction, Direction)>,
+    _start: Option<Position>,
+    _start_directions: Option<(Direction, Direction)>,
 }
 
 impl Graph {
     fn new() -> Graph {
         Graph {
             data: Vec::new(),
-            start: None,
-            start_directions: None,
+            _start: None,
+            _start_directions: None,
         }
     }
 
@@ -238,7 +238,7 @@ pub(crate) fn c1(input: String) -> String {
         graph.add_row(line.chars().map(|c| Field::new(c)).collect());
     }
     // go from start field and find the loop
-    let mut directions = vec![Direction::North, Direction::South, Direction::East, Direction::West];
+    let directions = vec![Direction::North, Direction::South, Direction::East, Direction::West];
     for direction in directions {
         let mut pos = graph.find_start();
         // try to take the first step
